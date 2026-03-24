@@ -3,21 +3,22 @@ import { useRouter } from 'next/router'
 import { useAuth } from '../lib/useAuth'
 import { useToast } from '../components/Toast'
 import { supabase } from '../lib/supabase'
+import { signInDemoStudent } from '../lib/demoAuth'
+import { DEMO_PASS, DEMO_STUDENTS } from '../lib/data'
 
 export default function Login() {
   const router  = useRouter()
-  const { signIn, signUp, resetPassword, user } = useAuth()
+  const { signIn, signUp, signOut, resetPassword, user } = useAuth()
   const toast   = useToast()
   const [tab, setTab]     = useState('login')
   const [loading, setLoading] = useState(false)
   const [msg, setMsg]     = useState(null)
   const [loginAs, setLoginAs] = useState('student')
+  const [selectedStudentKey, setSelectedStudentKey] = useState(DEMO_STUDENTS[0]?.key || '')
+  const [pendingStudentKey, setPendingStudentKey] = useState(null)
+  const [authAction, setAuthAction] = useState('signin')
 
-  useEffect(() => {
-    if (user) router.replace('/dashboard')
-  }, [user, router])
-
-  if (user) return null
+  const selectedStudent = DEMO_STUDENTS.find((student) => student.key === selectedStudentKey) || DEMO_STUDENTS[0]
 
   // Login form state
   const [liEmail, setLiEmail] = useState('')
@@ -30,10 +31,27 @@ export default function Login() {
   const [suEmail,   setSuEmail]   = useState('')
   const [suPass,    setSuPass]    = useState('')
 
+  useEffect(() => {
+    if (!selectedStudent) return
+    setLiEmail(selectedStudent.email)
+  }, [selectedStudentKey])
+
+  function getInitials(name) {
+    return name
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join('')
+  }
+
   async function doLogin() {
     if (!liEmail || !liPass) { setMsg({ type:'error', text:'Please enter email and password' }); return }
-    setLoading(true); setMsg(null)
+    setLoading(true); setMsg(null); setAuthAction('signin')
     try {
+      if (user && user.email?.toLowerCase() !== liEmail.toLowerCase()) {
+        await signOut()
+      }
       const authUser = await signIn(liEmail, liPass)
       const email = (authUser?.email || liEmail || '').toLowerCase()
       const { data: profile } = authUser?.id
@@ -60,6 +78,30 @@ export default function Login() {
     } catch(e) {
       setMsg({ type:'error', text: e.message })
     } finally { setLoading(false) }
+  }
+
+  async function handleDemoSignIn(student) {
+    if (!student || loading) return
+    setLoading(true)
+    setPendingStudentKey(student.key)
+    setAuthAction(user ? 'switch' : 'signin')
+    setMsg(null)
+
+    try {
+      if (user) {
+        await signOut()
+      }
+      const result = await signInDemoStudent(supabase, student, DEMO_PASS)
+      const helperMsg = result?.created ? ' Demo account was prepared.' : ''
+      toast(`Signed in as ${student.name}.${helperMsg}`, 'success')
+      router.push('/dashboard')
+    } catch (e) {
+      setMsg({ type: 'error', text: e.message || 'Unable to sign in with demo student.' })
+    } finally {
+      setLoading(false)
+      setPendingStudentKey(null)
+      setAuthAction('signin')
+    }
   }
 
   async function doSignUp() {
@@ -110,6 +152,66 @@ export default function Login() {
 
           {tab === 'login' ? (
             <>
+              <div className="auth-demo-wrap">
+                <div className="auth-demo-head">Student picker</div>
+                <select
+                  className="form-input auth-demo-select"
+                  value={selectedStudentKey}
+                  onChange={(e) => setSelectedStudentKey(e.target.value)}
+                  disabled={loading}
+                >
+                  {DEMO_STUDENTS.map((student) => (
+                    <option key={student.key} value={student.key}>
+                      {student.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="auth-demo-divider"><span>or quick demo login</span></div>
+                <div className="auth-demo-grid" role="list" aria-label="Quick demo student sign-in">
+                  {DEMO_STUDENTS.map((student) => {
+                    const selected = student.key === selectedStudentKey
+                    const busy = pendingStudentKey === student.key
+                    return (
+                      <button
+                        key={student.key}
+                        type="button"
+                        role="listitem"
+                        className={`auth-demo-btn${selected ? ' selected' : ''}`}
+                        onClick={() => {
+                          setSelectedStudentKey(student.key)
+                          handleDemoSignIn(student)
+                        }}
+                        disabled={loading}
+                      >
+                        <span className="auth-demo-avatar">{getInitials(student.name)}</span>
+                        <span className="auth-demo-name">
+                          {busy
+                            ? (authAction === 'switch' ? 'Switching…' : 'Signing in…')
+                            : student.name}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+                {selectedStudent && (
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-full auth-demo-primary"
+                    onClick={() => handleDemoSignIn(selectedStudent)}
+                    disabled={loading}
+                  >
+                    {loading
+                      ? (authAction === 'switch' ? 'Switching account…' : 'Signing in…')
+                      : `${user ? 'Switch to' : 'Sign in as'} ${selectedStudent.name}`}
+                  </button>
+                )}
+                {user && (
+                  <div className="auth-demo-current">
+                    Currently signed in as <strong>{user.name || user.email}</strong>. Choose a student above to switch accounts.
+                  </div>
+                )}
+              </div>
+
               <div className="auth-role-switch" role="tablist" aria-label="Sign-in role">
                 <button
                   type="button"
