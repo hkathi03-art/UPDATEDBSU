@@ -299,6 +299,21 @@ body.sb-collapsed .main-wrap{margin-left:0!important}
 .auth-role-btn.active{background:var(--yellow);border-color:var(--yellow);color:#111}
 .auth-link-btn{margin:.8rem auto 0;display:block;background:transparent;border:none;color:var(--yellow-dk);font-weight:700;font-size:.78rem;cursor:pointer}
 .auth-link-btn:hover{text-decoration:underline}
+.auth-demo-wrap{margin-bottom:1rem}
+.auth-demo-head{font-size:.72rem;letter-spacing:.08em;font-weight:800;text-transform:uppercase;color:var(--text3);margin-bottom:.42rem}
+.auth-demo-select{margin-bottom:.6rem}
+.auth-demo-divider{display:flex;align-items:center;gap:.55rem;margin:.1rem 0 .55rem}
+.auth-demo-divider::before,.auth-demo-divider::after{content:'';height:1px;background:var(--border2);flex:1}
+.auth-demo-divider span{font-size:.68rem;color:var(--text3);text-transform:lowercase}
+.auth-demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:.42rem}
+.auth-demo-btn{display:flex;align-items:center;gap:.5rem;text-align:left;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:.44rem .55rem;transition:all .2s;cursor:pointer}
+.auth-demo-btn:hover{border-color:var(--yellow)}
+.auth-demo-btn.selected{border-color:var(--yellow);background:var(--yellow-lt)}
+.auth-demo-avatar{width:20px;height:20px;border-radius:999px;background:var(--yellow);color:#111;font-size:.58rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.auth-demo-name{font-size:.76rem;font-weight:700;color:var(--text);line-height:1.2}
+.auth-demo-primary{margin-top:.6rem}
+.auth-demo-current{margin-top:.5rem;font-size:.72rem;color:var(--text3);line-height:1.45}
+.auth-demo-current strong{color:var(--text2)}
 
 .maya-fab{position:fixed;right:1.2rem;bottom:1.2rem;z-index:850;border:none;border-radius:999px;background:linear-gradient(135deg,var(--yellow) 0%,var(--yellow-dk) 100%);color:#111;padding:.78rem 1rem;display:flex;align-items:center;gap:.5rem;font-weight:800;font-size:.8rem;box-shadow:0 14px 28px rgba(0,0,0,.28),0 0 0 1px rgba(17,17,17,.12);cursor:pointer;transition:transform .2s,box-shadow .2s}
 .maya-fab i{font-size:.95rem}
